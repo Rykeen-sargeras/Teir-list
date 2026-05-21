@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tier List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --god:          #9b59f7;
+    --smash:        #2ecc71;
+    --fine:         #3b9ef5;
+    --mid:          #f5a623;
+    --questionable: #e8643a;
+    --jumpscare:    #e84040;
+    --bg:           #0f0f11;
+    --surface:      #18181c;
+    --surface2:     #222228;
+    --border:       rgba(255,255,255,0.08);
+    --text:         #f0eef8;
+    --muted:        rgba(240,238,248,0.45);
+    --radius:       10px;
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+
+  body {
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(155,89,247,0.18) 0%, transparent 70%);
+  }
+
+  header {
+    padding: 2.2rem 2rem 1.2rem;
+    display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    letter-spacing: 0.08em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .balance-chip {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 16px 6px 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .balance-chip strong { color: var(--text); font-size: 15px; }
+  .balance-chip .coin { font-size: 18px; }
+
+  .costs-row {
+    display: flex; gap: 8px; align-items: center;
+    padding: 0.75rem 2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .pill {
+    padding: 3px 11px; border-radius: 99px; font-weight: 600; font-size: 12px; letter-spacing: 0.03em;
+  }
+  .pill-move { background: rgba(245,166,35,0.18); color: #f5c46a; border: 1px solid rgba(245,166,35,0.3); }
+  .pill-lock { background: rgba(46,204,113,0.15); color: #5de898; border: 1px solid rgba(46,204,113,0.3); }
+  .costs-row span { color: var(--muted); }
+
+  .upload-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 16px; border-radius: var(--radius);
+    background: rgba(155,89,247,0.18); border: 1px solid rgba(155,89,247,0.45);
+    color: #c9a8ff; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .upload-btn:hover { background: rgba(155,89,247,0.3); }
+  #file-input { display: none; }
+
+  main { padding: 1.5rem 2rem; max-width: 1100px; margin: 0 auto; }
+
+  .tier-row {
+    display: flex; align-items: stretch;
+    border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    min-height: 84px;
+  }
+
+  .tier-label {
+    width: 130px; min-width: 130px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.35rem; letter-spacing: 0.1em;
+    text-align: center; padding: 10px 8px;
+    line-height: 1.15; color: #fff;
+  }
+
+  .tier-zone {
+    flex: 1; display: flex; flex-wrap: wrap;
+    gap: 7px; padding: 10px;
+    background: var(--surface); border-left: 1px solid var(--border);
+    align-content: flex-start; min-height: 84px;
+    transition: background 0.12s;
+  }
+  .tier-zone.drag-over { background: rgba(155,89,247,0.1); outline: 2px dashed rgba(155,89,247,0.5); outline-offset: -2px; }
+
+  .img-card {
+    width: 64px; height: 64px; border-radius: 8px; overflow: hidden;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    position: relative; cursor: grab; flex-shrink: 0;
+    background: var(--surface2);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .img-card:hover { transform: scale(1.06); box-shadow: 0 4px 18px rgba(0,0,0,0.5); }
+  .img-card:active { cursor: grabbing; opacity: 0.45; transform: scale(0.97); }
+  .img-card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; display: block; }
+  .img-card .del-btn {
+    position: absolute; top: 2px; right: 2px;
+    background: rgba(0,0,0,0.7); color: #fff; border: none;
+    border-radius: 50%; width: 17px; height: 17px; font-size: 11px;
+    cursor: pointer; display: none; align-items: center; justify-content: center; line-height: 1;
+  }
+  .img-card:hover .del-btn { display: flex; }
+  .lock-badge {
+    position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+    background: rgba(46,204,113,0.85); color: #fff;
+    font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px;
+    pointer-events: none; letter-spacing: 0.04em;
+  }
+
+  .pool-section { margin-top: 18px; }
+  .pool-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  #pool {
+    min-height: 84px; display: flex; flex-wrap: wrap; gap: 7px; padding: 10px;
+    background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border); align-content: flex-start;
+    transition: background 0.12s;
+  }
+  #pool.drag-over { background: rgba(155,89,247,0.1); outline: 2px dashed rgba(155,89,247,0.5); outline-offset: -2px; }
+
+  /* ── modals ── */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; z-index: 9999;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2rem 1.75rem; min-width: 280px; max-width: 340px;
+    text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+  .modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--muted); margin-bottom: 1.4rem; line-height: 1.55; }
+  .modal-btns { display: flex; gap: 10px; justify-content: center; }
+  .modal-btns button {
+    padding: 9px 22px; border-radius: var(--radius); border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--text); transition: background 0.12s;
+  }
+  .modal-btns button:hover { background: rgba(255,255,255,0.07); }
+  .modal-btns button.ok { background: rgba(155,89,247,0.25); border-color: rgba(155,89,247,0.5); color: #c9a8ff; }
+  .modal-btns button.ok:hover { background: rgba(155,89,247,0.4); }
+  .modal-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .modal-price { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .modal-price.move-color { color: #f5c46a; }
+  .modal-price.lock-color { color: #5de898; }
+  .insufficient { color: #e84040; font-size: 12px; margin-top: -10px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Tier List</h1>
+  <label class="upload-btn" for="file-input">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Upload Images
+  </label>
+  <input type="file" id="file-input" accept="image/*" multiple />
+  <div class="balance-chip">
+    <span class="coin">💰</span>
+    Balance: <strong>$<span id="bal">0</span></strong>
+  </div>
+</header>
+
+<div class="costs-row">
+  <span class="pill pill-move">$5 — Move image</span>
+  <span class="pill pill-lock">$50 — Lock image</span>
+  <span style="margin-left:6px;">Double-click an image to lock it in place.</span>
+</div>
+
+<main>
+  <div id="tiers"></div>
+
+  <div class="pool-section">
+    <div class="pool-label">Unranked — drag to a tier</div>
+    <div id="pool"
+      ondragover="dragOver(event)"
+      ondragleave="dragLeave(event)"
+      ondrop="drop(event,'__pool__')">
+    </div>
+  </div>
+</main>
+
+<!-- Move modal -->
+<div class="modal-bg" id="move-modal">
+  <div class="modal">
+    <div class="modal-price move-color">$5</div>
+    <h3>Move image?</h3>
+    <p id="move-msg">Moving an image between tiers costs $5.</p>
+    <div class="modal-btns">
+      <button onclick="cancelMove()">Cancel</button>
+      <button class="ok" id="move-ok" onclick="confirmMove()">Pay & Move</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lock modal -->
+<div class="modal-bg" id="lock-modal">
+  <div class="modal">
+    <div class="modal-price lock-color">$50</div>
+    <h3>Lock in place?</h3>
+    <p id="lock-msg">Locking permanently fixes this image. Costs $50.</p>
+    <div class="modal-btns">
+      <button onclick="cancelLock()">Cancel</button>
+      <button class="ok" id="lock-ok" onclick="confirmLock()">Pay & Lock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Locked warning -->
+<div class="modal-bg" id="locked-modal">
+  <div class="modal">
+    <h3 style="color:#e84040;">🔒 Locked!</h3>
+    <p>This image is locked in place and cannot be moved.</p>
+    <div class="modal-btns">
+      <button onclick="closeModal('locked-modal')">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Insufficient funds -->
+<div class="modal-bg" id="broke-modal">
+  <div class="modal">
+    <h3 style="color:#e84040;">Insufficient Funds</h3>
+    <p id="broke-msg">You don't have enough balance.</p>
+    <div class="modal-btns">
+      <button onclick="closeModal('broke-modal')">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TIERS = [
+  { id:'god',          label:'GOD TIER',    color:'#9b59f7' },
+  { id:'smash',        label:'SMASH',       color:'#2ecc71' },
+  { id:'fine',         label:'FINE',        color:'#3b9ef5' },
+  { id:'mid',          label:'MID',         color:'#f5a623' },
+  { id:'questionable', label:'QUESTIONABLE',color:'#e8643a' },
+  { id:'jumpscare',    label:'JUMPSCARE',   color:'#e84040' },
+];
+
+let balance = 0;
+let cards   = {};   // id → { tier, locked }
+let idSeq   = 0;
+let pending = null; // { id, targetTier }
+let lockTarget = null;
+
+function updateBal() { document.getElementById('bal').textContent = balance; }
+
+/* ── Build tier rows ── */
+(function buildTiers() {
+  const container = document.getElementById('tiers');
+  TIERS.forEach(t => {
+    const row  = document.createElement('div');
+    row.className = 'tier-row';
+
+    const lbl  = document.createElement('div');
+    lbl.className = 'tier-label';
+    lbl.style.background = t.color + '22';
+    lbl.style.borderRight = '3px solid ' + t.color;
+    lbl.style.color = t.color;
+    lbl.textContent = t.label;
+
+    const zone = document.createElement('div');
+    zone.className = 'tier-zone';
+    zone.dataset.tier = t.id;
+    zone.ondragover  = dragOver;
+    zone.ondragleave = dragLeave;
+    zone.ondrop      = (e) => drop(e, t.id);
+
+    row.appendChild(lbl);
+    row.appendChild(zone);
+    container.appendChild(row);
+  });
+})();
+
+/* ── File upload ── */
+document.getElementById('file-input').addEventListener('change', e => {
+  Array.from(e.target.files).forEach(f => {
+    const reader = new FileReader();
+    reader.onload = ev => addCard(ev.target.result);
+    reader.readAsDataURL(f);
+  });
+  e.target.value = '';
+});
+
+function addCard(src) {
+  const id  = 'c' + (++idSeq);
+  cards[id] = { tier: '__pool__', locked: false };
+  const el  = makeCard(id, src);
+  document.getElementById('pool').appendChild(el);
+}
+
+function makeCard(id, src) {
+  const wrap = document.createElement('div');
+  wrap.className = 'img-card';
+  wrap.draggable = true;
+  wrap.dataset.id = id;
+  wrap.dataset.src = src;
+
+  const img = document.createElement('img');
+  img.src = src; img.alt = '';
+  wrap.appendChild(img);
+
+  const del = document.createElement('button');
+  del.className = 'del-btn'; del.innerHTML = '×'; del.title = 'Remove';
+  del.onclick = ev => { ev.stopPropagation(); deleteCard(id); };
+  wrap.appendChild(del);
+
+  wrap.ondragstart = ev => ev.dataTransfer.setData('text/plain', id);
+  wrap.ondblclick  = () => showLockModal(id);
+  return wrap;
+}
+
+function deleteCard(id) {
+  document.querySelector(`.img-card[data-id="${id}"]`)?.remove();
+  delete cards[id];
+}
+
+/* ── Drag ── */
+function dragOver(e)  { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+function drop(e, tierId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const id = e.dataTransfer.getData('text/plain');
+  if (!id || !cards[id]) return;
+
+  if (cards[id].locked) { openModal('locked-modal'); return; }
+
+  const from = cards[id].tier;
+  if (from === tierId) return;
+
+  // free: first drop from pool into a tier
+  if (from === '__pool__' && tierId !== '__pool__') {
+    doMove(id, tierId); return;
+  }
+  // free: back to pool from a tier
+  if (tierId === '__pool__') {
+    if (balance < 5) { showBroke(5); return; }
+    pending = { id, targetTier: tierId };
+    showMoveModal();
+    return;
+  }
+  // tier → tier costs $5
+  if (balance < 5) { showBroke(5); return; }
+  pending = { id, targetTier: tierId };
+  showMoveModal();
+}
+
+function doMove(id, tierId) {
+  const el = document.querySelector(`.img-card[data-id="${id}"]`);
+  if (!el) return;
+  cards[id].tier = tierId;
+  if (tierId === '__pool__') {
+    document.getElementById('pool').appendChild(el);
+  } else {
+    document.querySelector(`.tier-zone[data-tier="${tierId}"]`).appendChild(el);
+  }
+}
+
+/* ── Move modal ── */
+function showMoveModal() {
+  document.getElementById('move-msg').textContent = `Moving costs $5. Balance: $${balance}`;
+  openModal('move-modal');
+}
+function confirmMove() {
+  if (!pending) return;
+  balance -= 5; updateBal();
+  doMove(pending.id, pending.targetTier);
+  pending = null;
+  closeModal('move-modal');
+}
+function cancelMove() { pending = null; closeModal('move-modal'); }
+
+/* ── Lock modal ── */
+function showLockModal(id) {
+  if (cards[id].locked) { openModal('locked-modal'); return; }
+  lockTarget = id;
+  document.getElementById('lock-msg').textContent = `Permanently lock this image in place for $50. Balance: $${balance}`;
+  const btn = document.getElementById('lock-ok');
+  btn.disabled = balance < 50;
+  openModal('lock-modal');
+}
+function confirmLock() {
+  if (!lockTarget || balance < 50) return;
+  balance -= 50; updateBal();
+  cards[lockTarget].locked = true;
+  const el = document.querySelector(`.img-card[data-id="${lockTarget}"]`);
+  if (el && !el.querySelector('.lock-badge')) {
+    const badge = document.createElement('div');
+    badge.className = 'lock-badge'; badge.textContent = 'LOCKED';
+    el.appendChild(badge);
+    el.style.borderColor = 'rgba(46,204,113,0.6)';
+  }
+  lockTarget = null;
+  closeModal('lock-modal');
+}
+function cancelLock() { lockTarget = null; closeModal('lock-modal'); }
+
+/* ── Insufficient funds ── */
+function showBroke(amount) {
+  document.getElementById('broke-msg').textContent = `You need $${amount} but your balance is $${balance}. Add funds via the balance chip.`;
+  openModal('broke-modal');
+}
+
+/* ── Modal helpers ── */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+/* close modal on backdrop click */
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+
+/* cheat code for testing — type "addfunds" anywhere */
+let _buf = '';
+document.addEventListener('keydown', e => {
+  _buf = (_buf + e.key).slice(-10);
+  if (_buf.endsWith('addfunds')) {
+    const amt = parseInt(prompt('Add how much? ($)') || '0', 10);
+    if (amt > 0) { balance += amt; updateBal(); }
+    _buf = '';
+  }
+});
+</script>
+</body>
+</html>
